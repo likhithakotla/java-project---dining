@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dining Level 1 Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+      input, button { padding: 8px; margin: 4px; }
+      .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+      pre { background: #f7f7f7; padding: 12px; border-radius: 8px; overflow: auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Dining Level 1 — Two Microservices</h1>
+    <p>Run <strong>restaurant-service (8081)</strong> and <strong>order-service (8082)</strong>, then use the buttons below.</p>
+
+    <div class="card">
+      <h2>Create Restaurant</h2>
+      <input id="rname" placeholder="Restaurant name" />
+      <input id="rcuisines" placeholder="Cuisines (comma-separated)" />
+      <button onclick="createRestaurant()">Create</button>
+      <pre id="rout"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Add Menu Item</h2>
+      <input id="rid" placeholder="Restaurant ID" />
+      <input id="itemname" placeholder="Item name" />
+      <input id="price" type="number" placeholder="Price (cents)" />
+      <button onclick="addMenu()">Add Item</button>
+      <pre id="miout"></pre>
+    </div>
+
+    <div class="card">
+      <h2>Create Order</h2>
+      <input id="mid" placeholder="Menu Item ID" />
+      <input id="qty" type="number" placeholder="Qty" value="1" />
+      <button onclick="createOrder()">Create Order</button>
+      <pre id="oout"></pre>
+    </div>
+
+    <script>
+      async function createRestaurant() {
+        const name = document.getElementById('rname').value || 'Demo Resto';
+        const cuisines = (document.getElementById('rcuisines').value || '')
+          .split(',').map(s => s.trim()).filter(Boolean);
+        const res = await fetch('http://localhost:8081/restaurants', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ name, cuisines })
+        });
+        document.getElementById('rout').textContent = JSON.stringify(await res.json(), null, 2);
+      }
+      async function addMenu() {
+        const rid = document.getElementById('rid').value;
+        const name = document.getElementById('itemname').value || 'Sample Item';
+        const priceCents = parseInt(document.getElementById('price').value || '999', 10);
+        const res = await fetch(`http://localhost:8081/restaurants/${rid}/menu-items`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ name, priceCents, available: true })
+        });
+        document.getElementById('miout').textContent = JSON.stringify(await res.json(), null, 2);
+      }
+      async function createOrder() {
+        const menuItemId = document.getElementById('mid').value;
+        const qty = parseInt(document.getElementById('qty').value || '1', 10);
+        const res = await fetch('http://localhost:8082/orders', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ items: [{ menuItemId, qty }] })
+        });
+        document.getElementById('oout').textContent = JSON.stringify(await res.json(), null, 2);
+      }
+    </script>
+  </body>
+</html>
