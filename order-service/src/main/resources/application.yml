@@ -1,0 +1,8 @@
+server:
+  port: 8082
+restaurant:
+  baseUrl: http://localhost:8081
+spring:
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
